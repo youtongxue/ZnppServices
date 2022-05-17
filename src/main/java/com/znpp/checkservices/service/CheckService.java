@@ -13,8 +13,9 @@ public class CheckService {
     private CheckClient checkClient;
     FileInfo fileInfo = new FileInfo();
 
-    public ForestResponse checkImage(String path) {
+    public ForestResponse checkImage(String path, String imgName) {
         fileInfo.setPath(path);
+        fileInfo.setImgName(imgName);
         ForestResponse res = checkClient.checkImage(fileInfo);
         return res;
     }

@@ -22,6 +22,7 @@ import java.util.Map;
 
 @RestController
 public class FileController {
+    private String imgPath = null;
 
     @Resource
     private FileConfig fileConfig;
@@ -50,29 +51,30 @@ public class FileController {
         // 使用日期来分类管理上传的文件
         String format = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         //先存临时文件
-        File folder = new File( fileConfig.getRootDir()+fileConfig.getTempFileDir() + format+"/");
+        File folder = new File(fileConfig.getRootDir() + fileConfig.getTempFileDir() + format + "/");
         if (!folder.exists()) {
             folder.mkdirs();
         }
 
         StringBuilder paths = new StringBuilder();
+        String oldName = null;
         for (MultipartFile file : files) {
-            if(file.isEmpty()){
+            if (file.isEmpty()) {
                 paths.append(",");
                 continue;
             }
-            String oldName = file.getOriginalFilename();
+            oldName = file.getOriginalFilename();
             //String newName = UUID.randomUUID().toString() + oldName.substring(oldName.lastIndexOf("."));
             File newFile = new File(folder, oldName);
             //保存文件
             file.transferTo(newFile);
-            paths.append(fileConfig.getFileDir() + format+"/"+oldName);
+            paths.append(fileConfig.getFileDir() + format + "/" + oldName);
 
-            filePath = folder+"/"+oldName;
+            filePath = folder + "/" + oldName;
         }
 
         //调用检测函数
-        ForestResponse response = checkService.checkImage(filePath);
+        ForestResponse response = checkService.checkImage(filePath, oldName);
 
         //rs = Result.ok();
 //        Map<String,Object> data = new HashMap(4);
@@ -83,7 +85,7 @@ public class FileController {
 //        String result = gson.toJson(data);
 
         //打印检测结果
-        System.out.println("打印结果 >>>    "+response.getContent());
+        System.out.println("打印结果 >>>    " + response.getContent());
 
         return String.valueOf(response.getContent());
     }
@@ -127,12 +129,22 @@ public class FileController {
 
         //返回结果
         Map<String,Object> data = new HashMap<>();
-        data.put("msg","successful");
-        data.put("path",fileConfig.getRootDir()+fileConfig.getFileDir() + format+"/"+fileName+fileType);
+        imgPath = fileConfig.getRootDir()+fileConfig.getFileDir() + format+"/"+fileName+fileType;
+        data.put("msg", "successful");
+        data.put("path", imgPath);
         Gson gson = new Gson();
         String result = gson.toJson(data);
 
-        return result;
+        System.out.println(result);
+        System.out.println("file name > "+ String.valueOf(fileName)+fileType);
+
+        //调用检测函数
+        ForestResponse response = checkService.checkImage(imgPath, String.valueOf(fileName)+fileType);
+        System.out.println(" check result : > > >   " + response.getContent());
+
+
+
+        return response.getContent();
     }
 
     /**
